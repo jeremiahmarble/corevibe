@@ -1,6 +1,30 @@
 node_modules
+
+# Env (never commit secrets)
 .env
 .env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# Builds
 dist
 frontend/dist
-backend/.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs (optional: delete this block if your team commits .vscode)
+.idea/
+
+# Tests / tooling (when you add them)
+coverage/
