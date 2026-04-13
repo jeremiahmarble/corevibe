@@ -1,11 +1,19 @@
 const MAX_USER_MESSAGE_CHARS = 32000;
+const ALLOWED_ROLES = new Set(['user', 'assistant']);
 
-function getLastUserContent(messages) {
-  if (!Array.isArray(messages)) return null;
-  for (let i = messages.length - 1; i >= 0; i -= 1) {
-    const m = messages[i];
-    if (m && m.role === 'user' && typeof m.content === 'string') {
-      return m.content;
+function validatePriorMessages(messages) {
+  if (!Array.isArray(messages)) {
+    return { ok: false, status: 'failed', reason: 'messages_invalid' };
+  }
+  for (const m of messages) {
+    if (!m || typeof m !== 'object') {
+      return { ok: false, status: 'failed', reason: 'messages_invalid' };
+    }
+    if (!ALLOWED_ROLES.has(m.role)) {
+      return { ok: false, status: 'failed', reason: 'messages_invalid_role' };
+    }
+    if (typeof m.content !== 'string') {
+      return { ok: false, status: 'failed', reason: 'messages_invalid_content' };
     }
   }
   return null;
@@ -15,26 +23,21 @@ function getLastUserContent(messages) {
  * Stub: validate shape, non-empty prompt, length. Hooks for future RAI checks.
  */
 export async function preProcess(body) {
-  const { messages } = body ?? {};
+  const { message, messages: priorMessages } = body ?? {};
 
-  if (!Array.isArray(messages) || messages.length === 0) {
+  const prior = priorMessages ?? [];
+  const shapeErr = validatePriorMessages(prior);
+  if (shapeErr) return shapeErr;
+
+  if (typeof message !== 'string' || !message.trim()) {
     return {
       ok: false,
       status: 'failed',
-      reason: 'messages_required',
+      reason: 'message_required',
     };
   }
 
-  const content = getLastUserContent(messages);
-  if (content == null || !content.trim()) {
-    return {
-      ok: false,
-      status: 'failed',
-      reason: 'empty_user_message',
-    };
-  }
-
-  if (content.length > MAX_USER_MESSAGE_CHARS) {
+  if (message.length > MAX_USER_MESSAGE_CHARS) {
     return {
       ok: false,
       status: 'failed',

@@ -2,19 +2,20 @@ import { loadSystemPrompt } from '../pipeline/loadSystemPrompt.js';
 import { postProcess } from '../pipeline/postProcess.js';
 import { preProcess } from '../pipeline/preProcess.js';
 import { getProvider } from '../providers/index.js';
+import { assertValidModelSelection, getModelsCatalog } from './modelsCatalog.js';
 import {
   normalizeChatResponse,
   outputTextFromOpenAICompat,
 } from '../utils/normalizeResponse.js';
 
 export async function runChatPipeline(body, log) {
-  const { provider: providerName, model, messages } = body;
+  const { provider: providerName, model, message, messages: priorMessages = [] } = body;
 
   log.info({
     event: 'chat_request_received',
     provider: providerName,
     model,
-    messageCount: Array.isArray(messages) ? messages.length : 0,
+    priorMessageCount: priorMessages.length,
   });
 
   log.info({ event: 'pre_processing_start' });
@@ -26,10 +27,21 @@ export async function runChatPipeline(body, log) {
   });
 
   if (!pre.ok) {
+    log.info({ event: 'pre_processing_rejected', reason: pre.reason });
     const err = new Error(pre.reason || 'Pre-processing failed');
     err.statusCode = 400;
     throw err;
   }
+
+  const catalog = await getModelsCatalog();
+  assertValidModelSelection(catalog, providerName, model);
+  log.info({
+    event: 'model_selection_validated',
+    provider: providerName,
+    model,
+  });
+
+  const messages = [...priorMessages, { role: 'user', content: message.trim() }];
 
   log.info({ event: 'system_prompt_load' });
   const systemPrompt = await loadSystemPrompt();

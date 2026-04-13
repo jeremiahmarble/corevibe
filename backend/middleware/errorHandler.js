@@ -9,12 +9,17 @@ export function errorHandler(err, req, res, next) {
   const log = req.log || logger;
   log.error({
     event: 'error',
-    err: { message: err.message, name: err.name },
+    err: {
+      message: err.message,
+      name: err.name,
+      ...(err.cause && { cause: String(err.cause.message || err.cause) }),
+    },
   });
 
   const status = err.statusCode && Number.isInteger(err.statusCode) ? err.statusCode : 500;
+  const hideInternalDetail = status === 500 && err.expose !== true;
   const body = {
-    error: status === 500 ? 'Internal Server Error' : err.message,
+    error: hideInternalDetail ? 'Internal Server Error' : err.message,
     ...(req.requestId && { requestId: req.requestId }),
   };
 
