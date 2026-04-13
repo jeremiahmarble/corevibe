@@ -15,4 +15,8 @@ export const env = {
     apiKey: process.env.AZURE_FOUNDRY_API_KEY || '',
     model: process.env.AZURE_FOUNDRY_MODEL || '',
   },
+  openai: {
+    apiKey: process.env.OPENAI_API_KEY || '',
+    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+  },
 };

@@ -4,6 +4,7 @@ import MessageInput from './MessageInput.jsx';
 import MessageList from './MessageList.jsx';
 import ModelSelector from './ModelSelector.jsx';
 
+const DEFAULT_PROVIDER = import.meta.env.VITE_DEFAULT_PROVIDER || 'openai';
 const DEFAULT_MODEL = import.meta.env.VITE_DEFAULT_MODEL || 'gpt-4o-mini';
 
 export default function ChatWindow() {
@@ -26,7 +27,7 @@ export default function ChatWindow() {
 
     try {
       const res = await postChat({
-        provider: 'azure-foundry',
+        provider: DEFAULT_PROVIDER,
         model,
         messages: nextMessages.map(({ role, content }) => ({ role, content })),
       });
@@ -37,13 +38,13 @@ export default function ChatWindow() {
     } finally {
       setLoading(false);
     }
-  }, [draft, loading, messages, model]);
+  }, [draft, loading, messages, model, DEFAULT_PROVIDER]);
 
   return (
     <section style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
         <div style={{ fontSize: '0.75rem', color: '#8b98a5' }}>
-          Provider: <strong style={{ color: '#e7e9ea' }}>azure-foundry</strong>
+          Provider: <strong style={{ color: '#e7e9ea' }}>{DEFAULT_PROVIDER}</strong>
         </div>
         <ModelSelector model={model} onModelChange={setModel} disabled={loading} />
       </div>
